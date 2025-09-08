@@ -36,14 +36,8 @@ Universal Image Enhancer is a powerful, privacy-focused web application that use
 
 <div align="center">
 
-### Upload & Enhancement Control
-![Upload Interface](docs/ss1.png)
+![Screenshot](https://github.com/hemangjoshi37a/Universal_Image_Enhancer/raw/main/screenshot.png)
 
-### Real-Time Comparison View  
-![Results Comparison](docs/ss2.png)
-
-### Enhancement History Panel
-![History Panel](docs/ss3.png)
 
 </div>
 
