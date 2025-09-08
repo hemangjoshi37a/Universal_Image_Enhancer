@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
     $mimeType     = $file['type'];
     $base64Image  = base64_encode(file_get_contents($file['tmp_name']));
 
-   $prompts = [
+    $prompts = [
         1 => "Subtly enhance the image. Focus on minor adjustments like lighting, contrast, and sharpness. Keep the original subject and composition.",
         2 => "Improve the image with noticeable enhancements. Adjust colors to be more vibrant and improve details. The overall scene should remain the same.",
         3 => "Apply creative filters and effects. The image should be clearly transformed but the original subject should be recognizable.",
