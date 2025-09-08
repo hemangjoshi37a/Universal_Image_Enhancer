@@ -60,59 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
     $mimeType     = $file['type'];
     $base64Image  = base64_encode(file_get_contents($file['tmp_name']));
 
-    $prompts = [
-        1 => (
-            'Subtle, high-fidelity enhancement: ' .
-            'Preserve original geometry, colour palette and semantic content. ' .
-            'Apply ΔE ≤ 2 global exposure correction, 0.95 ≤ gamma ≤ 1.05, 0.8 ≤ contrast ≤ 1.2. ' .
-            'Perform edge-preserving bilateral filter (σ spatial = 2 px, σ colour = 15) to reduce noise while keeping textures intact. ' .
-            'Sharpen with unsharp-mask (radius 1 px, amount 40 %). ' .
-            'De-haze using dark-channel prior (weight 0.2). ' .
-            'Output 8-bit sRGB, no artistic deviation, no hallucinated objects.'
-        ),
-
-        2 => (
-            'Moderate perceptual boost: ' .
-            'Maintain scene composition and subject identity. ' .
-            'Increase vibrance +25 (HSV), saturation +15, luminance contrast +20 via S-curve anchored at (38 %, 62 %). ' .
-            'Apply local tone-mapping (CLAHE, clip-limit 2, tile 8×8) for shadow/highlight recovery. ' .
-            'Run multi-scale detail enhancement (3 levels, gain 1.4) on luminance channel (YCbCr). ' .
-            'Remove JPEG artefacts with DCT-based denoiser (threshold 6). ' .
-            'Slight warm white-balance shift (+300 K). ' .
-            'Output photorealistic, no structural changes.'
-        ),
-
-        3 => (
-            'Creative style injection: ' .
-            'Keep salient objects and spatial layout; allow stylistic warp ≤ 5 % of diagonal. ' .
-            'Transfer colour grading inspired by cinematic LUT “Teal & Orange” (shadows:  hue +15°, sat +30; highlights: hue −10°, sat +20). ' .
-            'Apply painterly brush-stroke texture (stroke length 8 px, opacity 35 %, blend-mode “overlay”). ' .
-            'Boost micro-contrast with high-pass layer (radius 10 px, blend “soft-light”, opacity 50 %). ' .
-            'Add controlled lens-flare & bloom (threshold 240, radius 20 px, intensity 0.25). ' .
-            'Output 16-bit per channel, visually striking but recognisable.'
-        ),
-
-        4 => (
-            'Strong artistic reinterpretation: ' .
-            'Subject matter preserved; geometry may be stylised up to 15 % warp. ' .
-            'Adopt chosen fine-art medium (oil, water-colour, or digital impasto) with visible pigment strokes (stroke rate 0.7 px⁻¹, height-map 8-bit). ' .
-            'Quantise palette to 128 dominant colours via k-means, then apply dithering (Floyd-Steinberg) for print-like texture. ' .
-            'Dynamic lighting remapping: Caravaggio-style chiaroscuro (global contrast +50, localised spot-lights with 30° incidence). ' .
-            'Inject subtle grain (ISO 800 equivalent) for analogue feel. ' .
-            'Allow mild surreal colour shifts (ΔH ≤ 60° on colour-wheel). ' .
-            'Output high-resolution artwork, not photo-realistic.'
-        ),
-
-        5 => (
-            'Maximal generative transformation: ' .
-            'Use source image as latent seed only; semantic tokens must remain identifiable. ' .
-            'Prompt-guided diffusion: fantasy biome, ethereal volumetric lighting, particle fog, bioluminescent accents. ' .
-            'Camera-model override: 24 mm equiv., f/1.4, depth-of-field bokeh (circle-of-confusion 0.03 mm). ' .
-            'Incorporate dynamic sky replacement (2 k HDRi, sun-angle 15° above horizon, physically-based sky luminance Y = 0.05 + 0.95·(1−cos(θ))³). ' .
-            'Add cinematic post-process: chromatic-aberration (R +0.8 px, B −0.8 px), vignette (−20 % @ 70 % radius), film-grain (std-dev 2 DN). ' .
-            'Colour-grade to ACEScg, output Rec. 2020 10-bit, gamma 2.2. ' .
-            'Encourage imaginative elements (floating islands, glowing flora) while respecting original silhouette ≥ 30 %.'
-        )
+   $prompts = [
+        1 => "Subtly enhance the image. Focus on minor adjustments like lighting, contrast, and sharpness. Keep the original subject and composition.",
+        2 => "Improve the image with noticeable enhancements. Adjust colors to be more vibrant and improve details. The overall scene should remain the same.",
+        3 => "Apply creative filters and effects. The image should be clearly transformed but the original subject should be recognizable.",
+        4 => "Reimagine the image with a different style. The core subject might be the same, but the artistic interpretation should be significantly different (e.g., painterly, abstract).",
+        5 => "Generate a completely new and highly creative image based on the input. The original image should serve as a loose inspiration for a fantastical or surreal scene."
     ];
 
     $prompt = $prompts[$creativity] ?? $prompts[3];
