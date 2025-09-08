@@ -61,12 +61,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
     $base64Image  = base64_encode(file_get_contents($file['tmp_name']));
 
     $prompts = [
-        1 => "Subtly enhance the image. Focus on minor adjustments like lighting, contrast, and sharpness. Keep the original subject and composition.",
-        2 => "Improve the image with noticeable enhancements. Adjust colors to be more vibrant and improve details. The overall scene should remain the same.",
-        3 => "Apply creative filters and effects. The image should be clearly transformed but the original subject should be recognizable.",
-        4 => "Reimagine the image with a different style. The core subject might be the same, but the artistic interpretation should be significantly different (e.g., painterly, abstract).",
-        5 => "Generate a completely new and highly creative image based on the input. The original image should serve as a loose inspiration for a fantastical or surreal scene."
+        1 => (
+            'Subtle, high-fidelity enhancement: ' .
+            'Preserve original geometry, colour palette and semantic content. ' .
+            'Apply ΔE ≤ 2 global exposure correction, 0.95 ≤ gamma ≤ 1.05, 0.8 ≤ contrast ≤ 1.2. ' .
+            'Perform edge-preserving bilateral filter (σ spatial = 2 px, σ colour = 15) to reduce noise while keeping textures intact. ' .
+            'Sharpen with unsharp-mask (radius 1 px, amount 40 %). ' .
+            'De-haze using dark-channel prior (weight 0.2). ' .
+            'Output 8-bit sRGB, no artistic deviation, no hallucinated objects.'
+        ),
+
+        2 => (
+            'Moderate perceptual boost: ' .
+            'Maintain scene composition and subject identity. ' .
+            'Increase vibrance +25 (HSV), saturation +15, luminance contrast +20 via S-curve anchored at (38 %, 62 %). ' .
+            'Apply local tone-mapping (CLAHE, clip-limit 2, tile 8×8) for shadow/highlight recovery. ' .
+            'Run multi-scale detail enhancement (3 levels, gain 1.4) on luminance channel (YCbCr). ' .
+            'Remove JPEG artefacts with DCT-based denoiser (threshold 6). ' .
+            'Slight warm white-balance shift (+300 K). ' .
+            'Output photorealistic, no structural changes.'
+        ),
+
+        3 => (
+            'Creative style injection: ' .
+            'Keep salient objects and spatial layout; allow stylistic warp ≤ 5 % of diagonal. ' .
+            'Transfer colour grading inspired by cinematic LUT “Teal & Orange” (shadows:  hue +15°, sat +30; highlights: hue −10°, sat +20). ' .
+            'Apply painterly brush-stroke texture (stroke length 8 px, opacity 35 %, blend-mode “overlay”). ' .
+            'Boost micro-contrast with high-pass layer (radius 10 px, blend “soft-light”, opacity 50 %). ' .
+            'Add controlled lens-flare & bloom (threshold 240, radius 20 px, intensity 0.25). ' .
+            'Output 16-bit per channel, visually striking but recognisable.'
+        ),
+
+        4 => (
+            'Strong artistic reinterpretation: ' .
+            'Subject matter preserved; geometry may be stylised up to 15 % warp. ' .
+            'Adopt chosen fine-art medium (oil, water-colour, or digital impasto) with visible pigment strokes (stroke rate 0.7 px⁻¹, height-map 8-bit). ' .
+            'Quantise palette to 128 dominant colours via k-means, then apply dithering (Floyd-Steinberg) for print-like texture. ' .
+            'Dynamic lighting remapping: Caravaggio-style chiaroscuro (global contrast +50, localised spot-lights with 30° incidence). ' .
+            'Inject subtle grain (ISO 800 equivalent) for analogue feel. ' .
+            'Allow mild surreal colour shifts (ΔH ≤ 60° on colour-wheel). ' .
+            'Output high-resolution artwork, not photo-realistic.'
+        ),
+
+        5 => (
+            'Maximal generative transformation: ' .
+            'Use source image as latent seed only; semantic tokens must remain identifiable. ' .
+            'Prompt-guided diffusion: fantasy biome, ethereal volumetric lighting, particle fog, bioluminescent accents. ' .
+            'Camera-model override: 24 mm equiv., f/1.4, depth-of-field bokeh (circle-of-confusion 0.03 mm). ' .
+            'Incorporate dynamic sky replacement (2 k HDRi, sun-angle 15° above horizon, physically-based sky luminance Y = 0.05 + 0.95·(1−cos(θ))³). ' .
+            'Add cinematic post-process: chromatic-aberration (R +0.8 px, B −0.8 px), vignette (−20 % @ 70 % radius), film-grain (std-dev 2 DN). ' .
+            'Colour-grade to ACEScg, output Rec. 2020 10-bit, gamma 2.2. ' .
+            'Encourage imaginative elements (floating islands, glowing flora) while respecting original silhouette ≥ 30 %.'
+        )
     ];
+
     $prompt = $prompts[$creativity] ?? $prompts[3];
 
     $data = [
@@ -254,6 +302,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
             justify-content: center;
             transition: all 0.2s;
             backdrop-filter: blur(10px);
+        }
+
+/* Add this CSS to your existing <style> section, near the .settings-btn styles */
+
+        .github-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+        }
+
+        .github-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            color: white;
         }
 
         .settings-btn:hover {
@@ -848,18 +920,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
 </head>
 <body>
     <!-- Header -->
+    <!-- Header -->
     <header class="app-header">
         <div class="header-content">
             <div>
                 <h1 class="header-title">Universal Image Enhancer</h1>
                 <p class="header-subtitle">Let AI creatively enhance your images</p>
             </div>
-            <button class="settings-btn" id="settings-btn" title="Settings">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
-                </svg>
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <a href="https://github.com/hemangjoshi37a/Universal_Image_Enhancer" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="github-btn" 
+                title="View on GitHub">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+                <button class="settings-btn" id="settings-btn" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
         </div>
     </header>
 
